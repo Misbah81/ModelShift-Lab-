@@ -1,0 +1,5 @@
+Flask>=3.0,<4.0
+scikit-learn>=1.5,<2.0
+numpy>=1.26
+# Optional, only needed to run automated tests with pytest (unittest works without it):
+pytest>=8.0

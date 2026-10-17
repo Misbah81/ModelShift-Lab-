@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModelShift Lab | AI Robustness Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}?v=11">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="brand-mark">M</div>
+        <div class="brand-copy">
+            <strong>ModelShift</strong>
+            <span>AI ROBUSTNESS LAB</span>
+        </div>
+        <div class="side-label">WORKSPACE</div>
+        <a href="#experiment-studio" class="nav-item active" data-section="experiment-studio"><span class="nav-icon">◈</span><span>Experiment Studio</span></a>
+        <a href="#failure-analysis" class="nav-item" data-section="failure-analysis"><span class="nav-icon">◌</span><span>Failure Analysis</span></a>
+        <a href="#model-comparison" class="nav-item" data-section="model-comparison"><span class="nav-icon">▦</span><span>Model Comparison</span></a>
+        <a href="#history" class="nav-item" data-section="history"><span class="nav-icon">◷</span><span>History</span></a>
+        <div class="sidebar-bottom">
+            <span class="status-dot"></span>Local experiment engine<br>
+            <small>Python · scikit-learn</small>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <div class="eyebrow">EXPERIMENT WORKSPACE / MODEL ROBUSTNESS</div>
+                <h1>ModelShift Lab</h1>
+                <p>Stress-test machine learning models when the data changes.</p>
+            </div>
+            <div class="top-pill"><span class="status-dot"></span>Local ML Experiment</div>
+        </header>
+
+        <section id="experiment-studio" class="workspace-grid">
+
+            <!-- CONTROLS -->
+            <div class="panel controls-panel">
+                <div class="panel-heading">
+                    <div><span class="step">01</span><h3>Configure experiment</h3></div>
+                    <span class="tiny-tag">SETUP</span>
+                </div>
+
+                <label for="dataset">Synthetic dataset</label>
+                <select id="dataset">
+                    <option value="moons">Two Moons</option>
+                    <option value="circles">Concentric Circles</option>
+                    <option value="classification">Class Imbalance</option>
+                </select>
+
+                <div class="slider-label"><label for="samples">Number of samples</label><strong id="samplesValue">500</strong></div>
+                <input id="samples" type="range" min="100" max="1500" step="100" value="500">
+
+                <div class="slider-label"><label for="noise">Noise level</label><strong id="noiseValue">0.15</strong></div>
+                <input id="noise" type="range" min="0" max="0.5" step="0.05" value="0.15">
+
+                <div class="slider-label"><label for="imbalance">Class 0 proportion</label><strong id="imbalanceValue">0.50</strong></div>
+                <input id="imbalance" type="range" min="0.1" max="0.9" step="0.05" value="0.5">
+                <p class="muted imbalance-note" id="imbalanceNote">Only used by the Class Imbalance dataset.</p>
+
+                <div class="slider-label"><label for="shift">Distribution shift</label><strong id="shiftValue">0.00</strong></div>
+                <input id="shift" type="range" min="0" max="2" step="0.1" value="0">
+
+                <label for="seed">Random seed</label>
+                <input id="seed" class="seed-input" type="number" min="0" max="100000" step="1" value="42">
+
+                <label for="boundaryModel" class="boundary-label">Model for decision boundary</label>
+                <select id="boundaryModel">
+                    <option value="Logistic Regression">Logistic Regression</option>
+                    <option value="SVM (RBF)" selected>SVM (RBF)</option>
+                    <option value="Random Forest">Random Forest</option>
+                    <option value="MLP Neural Network">MLP Neural Network</option>
+                </select>
+
+                <div class="divider"></div>
+
+                <div class="label-row">
+                    <label>Models to compare</label>
+                    <span class="muted">Select at least one</span>
+                </div>
+                <div class="model-options" id="modelOptions">
+                    <label class="check-row"><input type="checkbox" value="Logistic Regression" checked><span class="model-dot blue"></span>Logistic Regression</label>
+                    <label class="check-row"><input type="checkbox" value="SVM (RBF)" checked><span class="model-dot purple"></span>SVM (RBF)</label>
+                    <label class="check-row"><input type="checkbox" value="Random Forest" checked><span class="model-dot orange"></span>Random Forest</label>
+                    <label class="check-row"><input type="checkbox" value="MLP Neural Network" checked><span class="model-dot green"></span>MLP Neural Network</label>
+                </div>
+
+                <button id="runBtn" class="primary-btn" type="button">Run experiment <span>↗</span></button>
+                <p class="hint">Start with shift 0, then raise it and rerun with the same seed.</p>
+            </div>
+
+            <!-- RESULTS -->
+            <div class="results-column">
+
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <span>BEST SHIFTED ACCURACY</span>
+                        <strong id="bestAccuracy">—</strong>
+                        <small id="bestModel">Run an experiment</small>
+                    </div>
+                    <div class="metric-card">
+                        <span>AVERAGE ACCURACY CHANGE</span>
+                        <strong id="avgDrop">—</strong>
+                        <small>Shifted minus clean, all models</small>
+                    </div>
+                    <div class="metric-card">
+                        <span>TEST SAMPLES</span>
+                        <strong id="testSamples">—</strong>
+                        <small>Held-out evaluation data</small>
+                    </div>
+                </div>
+
+                <div class="panel chart-panel">
+                    <div class="panel-heading">
+                        <div><span class="step">02</span><h3>Decision Boundary Explorer</h3></div>
+                        <span class="tiny-tag">MODEL PREDICTIONS</span>
+                    </div>
+                    <p class="panel-subtitle">Background regions show the selected model's predicted class. Dots show training samples.</p>
+                    <div id="boundaryPlot" class="plotly-chart"></div>
+                    <div class="legend-note">
+                        <span class="legend-chip class-zero"></span>Class 0
+                        <span class="legend-chip class-one"></span>Class 1
+                        <span class="legend-chip region-chip"></span>Predicted regions
+                    </div>
+                </div>
+
+                <div class="panel chart-panel">
+                    <div class="panel-heading">
+                        <div><span class="step">03</span><h3>What Changed in the Test Set?</h3></div>
+                        <span class="tiny-tag">SHIFT VIEW</span>
+                    </div>
+                    <p class="panel-subtitle">Open rings are the original held-out samples; filled markers are their shifted positions. Red ✕ marks samples the boundary model gets wrong after the shift.</p>
+                    <div id="shiftPlot" class="plotly-chart shift-chart"></div>
+                </div>
+
+                <section id="failure-analysis" class="panel chart-panel navigation-section">
+                    <div class="panel-heading">
+                        <div><span class="step">04</span><h3>Failure Analysis</h3></div>
+                        <span class="tiny-tag">CONFUSION MATRIX</span>
+                    </div>
+                    <p class="panel-subtitle">Rows are true classes, columns are predicted classes. Each model shows its clean and shifted matrix side by side.</p>
+                    <div id="confusionMatrices" class="confusion-grid">
+                        <div class="empty-state">Run an experiment to inspect classification errors.</div>
+                    </div>
+                    <div id="failureSummary" class="failure-summary"></div>
+                </section>
+
+                <section id="model-comparison" class="panel chart-panel navigation-section">
+                    <div class="panel-heading">
+                        <div><span class="step">05</span><h3>Model Comparison</h3></div>
+                        <span class="tiny-tag">ROBUSTNESS BENCHMARK</span>
+                    </div>
+                    <p class="panel-subtitle">Clean-test accuracy versus accuracy after the synthetic distribution shift.</p>
+                    <div class="chart-wrap metric-chart"><canvas id="accuracyChart"></canvas></div>
+                    <div id="resultsTable" class="table-wrap">
+                        <div class="empty-state">Your model comparison will appear here after the first run.</div>
+                    </div>
+                    <div class="action-row">
+                        <button id="exportBtn" class="secondary-btn" type="button" disabled>Export CSV report</button>
+                    </div>
+                </section>
+
+                <section id="history" class="panel chart-panel navigation-section">
+                    <div class="panel-heading">
+                        <div><span class="step">06</span><h3>Experiment History</h3></div>
+                        <span class="tiny-tag">LOCAL HISTORY</span>
+                    </div>
+                    <p class="panel-subtitle">Up to 10 recent runs, stored only in this browser. Click a run to load its settings.</p>
+                    <div id="historyList" class="history-list">
+                        <div class="empty-state">Your completed runs will appear here.</div>
+                    </div>
+                    <div class="action-row">
+                        <button id="clearHistoryBtn" class="secondary-btn" type="button">Clear history</button>
+                    </div>
+                </section>
+
+                <div class="panel insight-panel">
+                    <div class="insight-icon">✳</div>
+                    <div>
+                        <h3>Experiment Notes</h3>
+                        <p id="insightText">Run the experiment with shift 0 first. Then increase the shift and rerun with the same seed to see how predictions change.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>MODELSHIFT LAB<span>·</span>AI Robustness &amp; Failure Analysis</footer>
+    </main>
+</div>
+<script src="{{ url_for('static', filename='app.js') }}?v=11"></script>
+</body>
+</html>
