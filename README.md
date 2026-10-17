@@ -2,100 +2,54 @@
 
 ### Interactive ML Robustness & Failure Analysis Platform
 
-**ModelShift Lab** is a local, research-oriented machine-learning laboratory for studying how classical classifiers behave when the distribution of test data changes.
+**ModelShift Lab** is an interactive machine-learning laboratory for exploring how classification models behave when the distribution of test data changes.
 
-Instead of looking at accuracy on a single dataset, ModelShift Lab lets you run controlled experiments, visualize learned decision regions, compare clean and shifted test performance, inspect classification failures, and export reproducible experiment results.
+Instead of relying on a single accuracy score, the platform provides controlled experiments for comparing model performance, visualizing decision regions, and investigating how distribution shifts introduce prediction failures.
 
-> **Core idea:** A model performing well on clean test data does not automatically mean it will perform well when the input distribution changes.
-
----
-
-## ✨ Why ModelShift Lab?
-
-Machine-learning models are usually evaluated on data that is assumed to resemble the training distribution.
-
-But what happens when that assumption no longer holds?
-
-ModelShift Lab creates controlled synthetic experiments where the model is:
-
-**trained once → evaluated on clean data → evaluated again after a controlled feature shift → analyzed for failures**
-
-This makes model behavior easier to observe and investigate.
+> **Measure model behaviour. Don't assume robustness from clean-data accuracy alone.**
 
 ---
 
-## 🔬 What You Can Explore
+## ✦ What ModelShift Lab Does
 
-### 1. Synthetic Datasets
+### 🧪 Controlled ML Experiments
 
-Experiment with three binary classification problems:
+Experiment with three synthetic binary classification datasets:
 
-- **Two Moons** — nonlinear, curved class boundaries
-- **Concentric Circles** — radial nonlinear separation
-- **Class Imbalance** — configurable minority/majority class distribution
+- **Two Moons**
+- **Concentric Circles**
+- **Class Imbalance**
 
-Dataset parameters can be changed directly from the interface.
+Control dataset size, noise, imbalance, shift magnitude, and random seed.
 
----
+### 🤖 Compare Multiple Models
 
-### 2. Multiple ML Models
+Evaluate four scikit-learn classifiers under the same experimental conditions:
 
-Compare four classical scikit-learn classifiers:
+- Logistic Regression
+- RBF SVM
+- Random Forest
+- MLP Neural Network
 
-| Model | Learning Behaviour |
-|---|---|
-| Logistic Regression | Linear decision boundary |
-| RBF SVM | Nonlinear kernel-based separation |
-| Random Forest | Ensemble of decision trees |
-| MLP Neural Network | Learned nonlinear representation |
+### 📈 Visualize Decision Regions
 
-The same experiment configuration can be applied to multiple models, making comparisons easier.
+The platform generates prediction regions directly from the selected trained model over a two-dimensional feature grid.
 
----
+You can visually inspect how different classifiers separate the same data and where their predictions fail.
 
-### 3. Clean vs Shifted Evaluation
+### 🔄 Clean vs Shifted Data
 
-Models are trained using the original training distribution.
+Models are trained on the original training distribution and evaluated on:
 
-The held-out test set is then evaluated in two conditions:
+**Clean test data → Shifted test data**
 
-**Clean test data**
+The test samples remain the same while their features are deterministically shifted, allowing the experiment to isolate the effect of the selected distribution shift.
 
-The original test features.
+### 🔍 Failure Analysis
 
-**Shifted test data**
+Go beyond accuracy with:
 
-The same held-out samples after a deterministic synthetic feature shift.
-
-This allows the experiment to measure how much performance changes under the selected shift.
-
----
-
-### 4. Decision Regions
-
-ModelShift Lab generates an actual two-dimensional prediction grid using the selected trained estimator.
-
-The resulting visualization shows:
-
-- learned decision regions
-- test samples
-- class labels
-- correct predictions
-- incorrect predictions
-- shifted samples
-
-The displayed boundary is therefore based on the model's predictions rather than a manually drawn illustration.
-
----
-
-### 5. Failure Analysis
-
-The platform does more than display accuracy.
-
-For each model, you can inspect:
-
-- Clean accuracy
-- Shifted accuracy
+- Accuracy
 - Precision
 - Recall
 - F1 score
@@ -104,495 +58,146 @@ For each model, you can inspect:
 - Clean errors
 - Shifted errors
 - Newly introduced errors
-- Samples that become correct after shifting
+- Recovered predictions
 
-This helps answer a more useful question:
+This makes it possible to investigate **which failures appear after the distribution changes**.
 
-> **What actually changed when the distribution shifted?**
+### ♻️ Reproducible Experiments
 
----
+Configurable random seeds allow experiments to be repeated using the same configuration.
 
-### 6. Reproducible Experiments
+Recent experiments can also be stored in browser-local history and reloaded for comparison.
 
-Each experiment has a configurable random seed.
+### 📄 Experiment Reports
 
-For example:
-
-```text
-Dataset:       Two Moons
-Samples:       500
-Noise:         0.15
-Shift:         0.50
-Seed:          42
-Models:        Logistic Regression, SVM, Random Forest, MLP
-```
-
-Using the same configuration and seed makes the experiment reproducible within the same software environment.
+Export experiment results as CSV, including model metrics, confusion matrices, experiment settings, and failing test samples.
 
 ---
 
-### 7. Experiment History
+## 🧠 The Experiment
 
-The browser stores up to **10 recent experiments**.
+A typical ModelShift Lab experiment follows this process:
 
-You can:
+```text
+Synthetic Dataset
+       ↓
+Training Split
+       ↓
+Train ML Models
+       ↓
+      ┌───────────────┐
+      ↓               ↓
+ Clean Test       Shifted Test
+      ↓               ↓
+   Metrics          Metrics
+      └───────┬───────┘
+              ↓
+      Failure Analysis
+              ↓
+   Decision Regions
+              ↓
+       Experiment Report
+```
 
-- review previous configurations
-- reload an experiment
-- compare different shift settings
-- reproduce previous runs
+The goal is not simply to determine which model has the highest accuracy.
 
-History is stored locally in the browser and is not uploaded to a server.
+The goal is to understand **how model behaviour changes when the data distribution changes.**
 
 ---
 
-### 8. CSV Experiment Reports
+## 📊 Example Investigation
 
-Export the current experiment as a CSV report containing:
+A simple experiment can start with:
 
-- experiment settings
-- model metrics
-- confusion matrices
-- failure counts
-- misclassified test samples
+```text
+Dataset:  Two Moons
+Samples:  500
+Noise:    0.15
+Shift:    0.0
+Seed:     42
+```
 
-This makes it easier to continue analysis outside the application.
+Run the experiment, then increase the shift:
+
+```text
+0.0 → 0.5 → 1.5
+```
+
+Compare how each model's:
+
+- decision region
+- accuracy
+- confusion matrix
+- error count
+- newly introduced failures
+
+change as the distribution moves.
 
 ---
 
-## 🧪 Example Experiment
-
-Try the following experiment:
-
-### Experiment A — Baseline
-
-```text
-Dataset: Two Moons
-Samples: 500
-Noise: 0.15
-Shift: 0.0
-Seed: 42
-```
-
-Run all four models.
-
-Record their clean performance.
-
-### Experiment B — Moderate Shift
-
-Change:
-
-```text
-Shift: 0.5
-```
-
-Run the experiment again.
-
-Compare:
-
-- clean accuracy
-- shifted accuracy
-- confusion matrices
-- decision regions
-- failure counts
-
-### Experiment C — Stronger Shift
-
-Try:
-
-```text
-Shift: 1.5
-```
-
-Now investigate whether the performance degradation becomes larger.
-
-The goal is not to find a model that "wins."
-
-The goal is to **observe and explain model behaviour under controlled distribution changes.**
-
----
-
-## 📊 What the Results Mean
-
-### Clean Accuracy
-
-Performance on held-out test features from the original generated distribution.
-
-### Shifted Accuracy
-
-Performance on the same held-out examples after their features have been deterministically shifted.
-
-### Accuracy Change
-
-```text
-Shifted Accuracy − Clean Accuracy
-```
-
-A negative value indicates that performance decreased after the selected shift.
-
-### Confusion Matrix
-
-Rows represent the true class.
-
-Columns represent the predicted class.
-
-Classes are ordered:
-
-```text
-0
-1
-```
-
-### Failure Counts
-
-The application distinguishes between:
-
-- errors already present on clean data
-- errors after shifting
-- newly introduced errors
-- predictions that become correct after shifting
-
-This gives more information than accuracy alone.
-
----
-
-## 🧠 Technical Architecture
-
-```text
-                    ┌─────────────────────┐
-                    │    Browser UI       │
-                    │ HTML / CSS / JS     │
-                    └──────────┬──────────┘
-                               │
-                         JSON API
-                               │
-                    ┌──────────▼──────────┐
-                    │      Flask          │
-                    │  Experiment API     │
-                    └──────────┬──────────┘
-                               │
-             ┌─────────────────┼─────────────────┐
-             │                 │                 │
-             ▼                 ▼                 ▼
-       Dataset Engine     Model Training    Evaluation
-             │                 │                 │
-             ▼                 ▼                 ▼
-       Synthetic Data    scikit-learn      Clean / Shifted
-             │                 │                 │
-             └─────────────────┼─────────────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │ Failure Analysis    │
-                    │ Decision Regions    │
-                    │ Metrics / Reports   │
-                    └─────────────────────┘
-```
-
----
-
-## 🛠️ Technology Stack
-
-**Frontend**
-
-- HTML
-- CSS
-- JavaScript
-- Chart.js
-- Plotly.js
+## 🛠️ Tech Stack
 
 **Backend**
 
-- Python
-- Flask
+Python · Flask
 
 **Machine Learning**
 
-- scikit-learn
-- NumPy
-- Pandas
+scikit-learn · NumPy
+
+**Frontend**
+
+HTML · CSS · JavaScript
+
+**Visualization**
+
+Plotly.js · Chart.js
 
 **Testing**
 
-- pytest
-- unittest
+pytest · unittest
 
-**Storage**
+## 🔬 Scientific Scope
 
-- Browser Local Storage for experiment history
+ModelShift Lab is an **educational and research-oriented prototype**, not a production robustness benchmark.
 
-No external database is required.
+The distribution shifts are synthetic and intentionally controlled. They demonstrate specific behaviours but cannot represent every form of real-world data drift.
 
----
+Results should therefore be interpreted as experimental observations rather than universal claims about model robustness.
 
-## 📁 Project Structure
+The current implementation focuses on:
 
-```text
-ModelShift_Lab/
-│
-├── app.py
-├── requirements.txt
-├── README.md
-├── LICENSE
-├── .gitignore
-│
-├── tests/
-│   └── test_app.py
-│
-├── templates/
-│   └── index.html
-│
-└── static/
-    ├── styles.css
-    └── app.js
-```
-
-### Main Files
-
-| File | Purpose |
-|---|---|
-| `app.py` | Flask application, datasets, models, experiments and API |
-| `index.html` | Main dashboard interface |
-| `styles.css` | Dashboard styling and responsive layout |
-| `app.js` | Experiment controls, charts, history and CSV export |
-| `test_app.py` | Automated API and reproducibility tests |
-| `requirements.txt` | Python dependencies |
+- Binary classification
+- Two-dimensional feature spaces
+- Synthetic datasets
+- Controlled feature shifts
+- Classical machine-learning classifiers
 
 ---
 
-## ⚙️ Installation
+## 🚀 Future Direction
 
-### Requirements
+Planned extensions include:
 
-- Python **3.10+**
-- Modern web browser
-- Internet connection on first page load for CDN-hosted Chart.js and Plotly.js assets
-
-Node.js is **not required**.
-
-No:
-
-- IoT hardware
-- database
-- cloud account
-- external ML service
-
-is required.
-
----
-
-## 🪟 Windows Setup
-
-Clone or download the repository.
-
-Open the project folder in VS Code.
-
-Create a virtual environment:
-
-```powershell
-py -m venv .venv
-```
-
-Activate it:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Upgrade pip:
-
-```powershell
-python -m pip install --upgrade pip
-```
-
-Install dependencies:
-
-```powershell
-python -m pip install -r requirements.txt
-```
-
-Start the application:
-
-```powershell
-python app.py
-```
-
-Open:
-
-**http://127.0.0.1:5000/**
-
-Keep the terminal running while using the application.
-
-Stop the server with:
-
-```text
-Ctrl + C
-```
-
-### If PowerShell blocks virtual-environment activation
-
-You can directly use the virtual environment's Python:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-and:
-
-```powershell
-.\.venv\Scripts\python.exe app.py
-```
-
----
-
-## 🧪 Run Tests
-
-Using pytest:
-
-```powershell
-python -m pytest -q
-```
-
-Or using unittest:
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
----
-
-## 🔌 API
-
-### Health Check
-
-```http
-GET /api/health
-```
-
-Returns application status and available datasets/models.
-
-While the Flask application is running:
-
-```text
-http://127.0.0.1:5000/api/health
-```
-
-### Experiment Endpoint
-
-```http
-POST /api/experiment
-```
-
-Supported input fields include:
-
-```text
-dataset
-samples
-noise
-imbalance
-shift
-seed
-models
-boundary_model
-```
-
-The endpoint returns experiment metrics, confusion matrices, sample coordinates, predictions and decision-region grid data.
-
----
-
-## 🔍 Scientific Interpretation
-
-ModelShift Lab is intentionally designed as an **educational and experimental platform**, not as a production robustness benchmark.
-
-The shift mechanism is synthetic and hand-designed.
-
-Therefore:
-
-> A model performing well in these experiments does not mean that it is universally robust to real-world distribution shift.
-
-Likewise, poor performance under one synthetic shift does not automatically mean that the model will fail in every real-world scenario.
-
-Meaningful experimentation should involve:
-
-- multiple random seeds
-- multiple shift magnitudes
-- multiple datasets
-- multiple models
-- clearly documented configurations
-- appropriate evaluation metrics
-
-The objective is to **measure behaviour rather than make unsupported robustness claims.**
-
----
-
-## ⚠️ Current Limitations
-
-The current version focuses on:
-
-- two input features
-- binary classification
-- synthetic datasets
-- synthetic feature shifts
-- scikit-learn classifiers
-
-It does not attempt to model every form of real-world distribution shift.
-
-The decision-region visualization represents predictions from a trained estimator over a two-dimensional grid; it is not a theoretical representation of the model's mathematical boundary.
-
-Different Python, scikit-learn, NumPy or platform versions may produce small numerical differences even when the same seed is used.
-
----
-
-## 🚀 Future Development
-
-Potential future directions include:
-
-- Additional drift types
-- More statistical drift detectors
+- Additional types of distribution shift
+- Statistical drift detection
 - Multi-class experiments
-- Temporal distribution shift
+- Temporal data shift
 - Model retraining experiments
-- Cross-seed statistical summaries
-- Experiment comparison views
-- Automated experiment reports
-- More classifiers
-- Larger benchmark datasets
-- Interactive failure inspection
-- Robustness curves across shift magnitude
+- Cross-seed analysis
+- Experiment comparison
+- Extended robustness reports
+- Additional ML algorithms
 
 ---
 
-## 🎯 Learning Goals
+## 💡 Why This Project?
 
-This project was developed to explore practical concepts in:
+ModelShift Lab was built to explore an important practical ML question:
 
-- Machine Learning
-- Model Evaluation
-- Distribution Shift
-- Decision Boundaries
-- Classification Failure Analysis
-- Reproducible Experiments
-- Data Visualization
-- Flask API Development
-- Scientific Experiment Design
+> **What happens when the data changes after a model has already been trained?**
 
-The project is intentionally built around **experimentation and observation**, rather than treating a single accuracy score as the complete story.
-
----
-
-## 📌 Project Status
-
-**Status:** Active Learning / Research Prototype
-
-The project is being developed incrementally, with each stage adding more meaningful experimentation and analysis.
-
----
-
-## 📜 License
-
-MIT License.
-
-See `LICENSE` for details.
+It combines machine learning, visualization, experimentation, evaluation, and failure analysis into one interactive environment.
 
 ---
 
@@ -600,13 +205,13 @@ See `LICENSE` for details.
 
 **Misbah Muhammad Rafique**
 
-Computer Engineering Student  
-Interested in Machine Learning, AI, Software Development and Intelligent Systems.
+Computer Engineering Student | AI & Machine Learning | Software Development
 
-GitHub: `https://github.com/Misbah81`
-
-LinkedIn: `https://linkedin.com/in/misbah-rafique-b6935933a`
+GitHub: **github.com/Misbah81**  
+LinkedIn: **linkedin.com/in/misbah-rafique-b6935933a**
 
 ---
 
-> **ModelShift Lab — Don't just measure accuracy. Investigate what changes when the data changes.**
+### ModelShift Lab
+
+**Explore the shift. Measure the failure. Understand the model.**
